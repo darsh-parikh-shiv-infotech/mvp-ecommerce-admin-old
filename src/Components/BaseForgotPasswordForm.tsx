@@ -4,14 +4,15 @@ import { Link } from 'react-router-dom';
 import { MdOutlineEmail } from 'react-icons/md';
 
 interface BaseForgotPasswordFormProp {
-  submitHandler: () => void;
+  loading: boolean;
+  submitHandler: (email: string) => void;
 }
 
 interface ResetPasswordFormValues {
   email: string;
 }
 
-const BaseForgotPasswordForm = ({ submitHandler }: BaseForgotPasswordFormProp) => {
+const BaseForgotPasswordForm = ({ loading, submitHandler }: BaseForgotPasswordFormProp) => {
   const formik = useFormik<ResetPasswordFormValues>({
     initialValues: {
       email: '',
@@ -20,7 +21,7 @@ const BaseForgotPasswordForm = ({ submitHandler }: BaseForgotPasswordFormProp) =
     validateOnBlur: true,
     validateOnChange: true,
     onSubmit: (values) => {
-      submitHandler();
+      submitHandler(values.email);
     },
   });
   const emailError =
@@ -67,12 +68,13 @@ const BaseForgotPasswordForm = ({ submitHandler }: BaseForgotPasswordFormProp) =
       </div>
       <button
         type="submit"
-        className="font-bold text-white bg-linear-to-r from-red-700 to-red-800  p-2 rounded-lg hover:-translate-y-0.5 hover:shadow-md hover:bg-red-700 shadow-rose-400"
+        className={`font-bold text-white bg-linear-to-r from-red-700 to-red-800  p-2 rounded-lg hover:-translate-y-0.5 hover:shadow-md hover:bg-red-700 shadow-rose-400 ${loading && 'opacity-50'}`}
+        disabled={loading}
       >
-        Send OTP
+        {loading ? 'Loading...' : 'Send OTP'}
       </button>
       <div className="flex justify-center">
-        <Link to={'/'} className="font-medium text-sm text-red-600 hover:border-b">
+        <Link to={'/login'} className="font-medium text-sm text-red-600 hover:border-b">
           Back To Sign In?
         </Link>
       </div>

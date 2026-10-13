@@ -3,15 +3,54 @@ import BaseAppInfoAuth from '../../Components/BaseAppInfoAuth';
 import { LuShoppingCart } from 'react-icons/lu';
 import BaseForgotPasswordForm from '../../Components/BaseForgotPasswordForm';
 import BaseChangePasswordForm from '../../Components/BaseChangePasswordForm';
+import { useAppDispatch, useAppSelector } from '../../Components/Hook/Common/hooks';
+import { changePassword, forgotPassword } from '../../Slices/Auth/AuthThunk';
+import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
+import { clearAuthError } from '../../Slices/Auth/AuthSlice';
 
 const ResetPasswordPage = () => {
+  const { loading } = useAppSelector((state) => state.auth);
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+
+  const [changePasswordEmail, setChangePasswordEmail] = useState<string>('');
   const [step, setStep] = useState<1 | 2>(1);
-  const forgotPasswordHandler = () => {
-    setStep(2);
+  const forgotPasswordHandler = async (email: string) => {
+    const result = await dispatch(forgotPassword({ email }));
+
+    if (forgotPassword.fulfilled.match(result)) {
+      setChangePasswordEmail(email);
+      setStep(2);
+      return;
+    }
+    if (forgotPassword.rejected.match(result)) {
+      toast.error(
+        result.payload?.message ?? result.error.message ?? 'Forgot Password Failed! Try Again',
+      );
+      dispatch(clearAuthError());
+    }
     return;
   };
-  const resetPasswordHandler = () => {
-    setStep(1);
+  const resetPasswordHandler = async (
+    email: string,
+    otp: number,
+    newPassword: string,
+    confirmPassword: string,
+  ) => {
+    const result = await dispatch(changePassword({ email, otp, newPassword, confirmPassword }));
+
+    if (changePassword.fulfilled.match(result)) {
+      setChangePasswordEmail('');
+      return navigate('/');
+    }
+    if (changePassword.rejected.match(result)) {
+      toast.error(
+        result.payload?.message ?? result.error.message ?? 'Change Password Failed! Try Again',
+      );
+      dispatch(clearAuthError());
+    }
+
     return;
   };
   return (
@@ -35,10 +74,13 @@ const ResetPasswordPage = () => {
               </div>
             </div>
 
-            {step === 1 && <BaseForgotPasswordForm submitHandler={forgotPasswordHandler} />}
-            {step === 2 && (
+            {step === 1 && (
+              <BaseForgotPasswordForm loading={loading} submitHandler={forgotPasswordHandler} />
+            )}
+            {step === 2 && changePasswordEmail.length > 0 && (
               <BaseChangePasswordForm
-                email="changeEmail@mail.com"
+                loading={loading}
+                email={changePasswordEmail}
                 submitHandler={resetPasswordHandler}
               />
             )}

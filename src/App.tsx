@@ -2,14 +2,39 @@ import { RouterProvider } from 'react-router-dom';
 import { router } from './Routes/Routes';
 import { initFlowbite } from 'flowbite';
 import { useEffect } from 'react';
+import { ToastContainer } from 'react-toastify';
+import { useAppDispatch, useAppSelector } from './Components/Hook/Common/hooks';
+import { checkAuthStatus } from './Slices/Auth/AuthThunk';
+import FullLoader from './Components/Common/FullLoader';
 
 function App() {
+  const { isInitializing } = useAppSelector((state) => state.auth);
+  const dispatch = useAppDispatch();
+  useEffect(() => {
+    dispatch(checkAuthStatus());
+  }, [dispatch]);
+
   useEffect(() => {
     initFlowbite();
   }, []);
+
+  // Keep the app quiet until the initial auth check finishes
+  if (isInitializing) {
+    return <FullLoader SpinnerTitle='Loading...' />
+  }
   return (
     <>
       <RouterProvider router={router} />
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={true}
+        closeOnClick
+        pauseOnHover
+        theme="light"
+        limit={3}
+      />
     </>
   );
 }

@@ -2,8 +2,33 @@ import '../../Styles/Login.css';
 import { LuShoppingCart } from 'react-icons/lu';
 import BaseAppInfoAuth from '../../Components/BaseAppInfoAuth';
 import BaseLoginForm from '../../Components/BaseLoginForm';
+import { useAppDispatch, useAppSelector } from '../../Components/Hook/Common/hooks';
+import { Navigate, useNavigate } from 'react-router-dom';
+import { loginUser } from '../../Slices/Auth/AuthThunk';
+import { toast } from 'react-toastify';
+import { clearAuthError } from '../../Slices/Auth/AuthSlice';
 
 const LoginPage = () => {
+  const { loading, isAuthenticated } = useAppSelector((state) => state.auth);
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+
+  const submitHandler = async (email: string, password: string) => {
+    const result = await dispatch(loginUser({ email, password }));
+    if (loginUser.fulfilled.match(result)) {
+      return navigate('/');
+    }
+    if (loginUser.rejected.match(result)) {
+      toast.error(result.payload?.message ?? result.error.message ?? 'Login Failed! Try Again');
+      dispatch(clearAuthError());
+    }
+
+    return;
+  };
+
+  if (isAuthenticated) {
+    return <Navigate to={'/'} />;
+  }
   return (
     <div className="w-full h-dvh overflow-hidden bg-red-100">
       <div className="w-full h-full flex flex-col md:flex-row px-4 md:px-12">
@@ -24,7 +49,7 @@ const LoginPage = () => {
             </div>
 
             {/* Login Form */}
-            <BaseLoginForm />
+            <BaseLoginForm loading={loading} onSubmit={submitHandler} />
           </div>
         </div>
 

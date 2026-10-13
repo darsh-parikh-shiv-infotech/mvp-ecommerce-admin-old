@@ -8,7 +8,13 @@ import { RESEND_OTP_TIME } from './Constant/constants';
 
 interface BaseChangePasswordFormProps {
   email: string;
-  submitHandler: () => void;
+  loading: boolean;
+  submitHandler: (
+    email: string,
+    otp: number,
+    newPassword: string,
+    confirmNewPassword: string,
+  ) => void;
 }
 
 interface ChangePasswordFormValues {
@@ -17,7 +23,7 @@ interface ChangePasswordFormValues {
   confirmNewPassword: string;
 }
 
-const BaseChangePasswordForm = ({ email, submitHandler }: BaseChangePasswordFormProps) => {
+const BaseChangePasswordForm = ({ email, submitHandler, loading }: BaseChangePasswordFormProps) => {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
@@ -25,12 +31,11 @@ const BaseChangePasswordForm = ({ email, submitHandler }: BaseChangePasswordForm
   const [canResend, setCanResend] = useState<boolean>(false);
 
   useEffect(() => {
-    if (timeLeft <= 0) {
-      setCanResend(true);
-      return;
-    }
-
     const timer = setInterval(() => {
+      if (timeLeft <= 0) {
+        setCanResend(true);
+        return;
+      }
       setTimeLeft((prev) => prev - 1);
     }, 1000);
 
@@ -52,12 +57,18 @@ const BaseChangePasswordForm = ({ email, submitHandler }: BaseChangePasswordForm
     validateOnBlur: true,
     validateOnChange: true,
     onSubmit: (values) => {
-      console.log(values);
-      // submitHandler()
+      // console.log(values);
+      const otp = Number(values.otp.join(''));
+      submitHandler(email, otp, values.newPassword, values.confirmNewPassword);
     },
   });
 
-  const otpError = formik.touched.otp || formik.submitCount > 0 ? formik.errors.otp : undefined;
+  const otpError =
+    formik.touched.otp || formik.submitCount > 0
+      ? typeof formik.errors.otp === 'string'
+        ? formik.errors.otp
+        : undefined
+      : undefined;
   const newPasswordError =
     formik.touched.newPassword || formik.submitCount > 0 ? formik.errors.newPassword : undefined;
   const confirmNewPasswordError =
@@ -122,6 +133,8 @@ const BaseChangePasswordForm = ({ email, submitHandler }: BaseChangePasswordForm
               maxLength={1}
               value={digit}
               aria-label={`OTP digit ${index + 1}`}
+              aria-invalid={Boolean(otpError)}
+              aria-describedby={otpError ? 'otp-error' : undefined}
               onBlur={formik.handleBlur}
               onChange={(event) => handleOtpChange(index, event.target.value)}
               onPaste={handleOtpPaste}
@@ -130,12 +143,12 @@ const BaseChangePasswordForm = ({ email, submitHandler }: BaseChangePasswordForm
                   inputRefs.current[index - 1]?.focus();
                 }
               }}
-              className="h-10 w-7 md:h-12 md:w-12 rounded-lg border border-gray-300 bg-white text-center text-sm md:text-lg focus:outline-none focus:ring-1 focus:ring-red-400 focus:shadow-md"
+              className={`h-10 w-7 md:h-12 md:w-12 rounded-lg border ${otpError ? 'border-red-600' : 'border-gray-300'} bg-white text-center text-sm md:text-lg focus:outline-none focus:ring-1 focus:ring-red-400 focus:shadow-md`}
             />
           ))}
         </div>
         {otpError ? (
-          <span id="new-password-error" role="alert" className="text-sm font-normal text-red-700">
+          <span id="otp-error" role="alert" className="text-sm font-normal text-red-700">
             {otpError}
           </span>
         ) : null}
@@ -225,12 +238,13 @@ const BaseChangePasswordForm = ({ email, submitHandler }: BaseChangePasswordForm
 
       <button
         type="submit"
-        className="rounded-lg bg-linear-to-r from-red-700 to-red-800 p-2 font-bold text-white shadow-rose-400 hover:-translate-y-0.5 hover:bg-red-700 hover:shadow-md"
+        className={`rounded-lg bg-linear-to-r from-red-700 to-red-800 p-2 font-bold text-white shadow-rose-400 hover:-translate-y-0.5 hover:bg-red-700 hover:shadow-md ${loading && 'opacity-50'}`}
+        disabled={loading}
       >
         Update Password
       </button>
       <div className="flex justify-center">
-        <Link to={'/'} className="font-medium text-sm text-red-600 hover:border-b">
+        <Link to={'/login'} className="font-medium text-sm text-red-600 hover:border-b">
           Back To Sign In?
         </Link>
       </div>

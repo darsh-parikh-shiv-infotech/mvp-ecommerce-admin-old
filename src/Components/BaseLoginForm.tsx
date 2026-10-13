@@ -4,12 +4,16 @@ import { useState } from 'react';
 import { useFormik } from 'formik';
 import { LoginValidationSchema } from './FormValidation/LoginValiation';
 
-interface LoginFormValues {
+export interface LoginFormValues {
   email: string;
   password: string;
 }
+interface BaseLoginFormProp {
+  loading: boolean;
+  onSubmit: (email: string, password: string) => void;
+}
 
-const BaseLoginForm = () => {
+const BaseLoginForm = ({ loading: isLoading, onSubmit }: BaseLoginFormProp) => {
   const [showPassword, setShowPassword] = useState(false);
 
   const formik = useFormik<LoginFormValues>({
@@ -20,11 +24,12 @@ const BaseLoginForm = () => {
     validationSchema: LoginValidationSchema,
     validateOnBlur: true,
     validateOnChange: true,
-    onSubmit: (values) => {
-      console.log(values);
-      return;
+    onSubmit: async (values: LoginFormValues) => {
+      // console.log(values);
+      onSubmit(values.email, values.password);
     },
   });
+
   const emailError =
     formik.touched.email || formik.submitCount > 0 ? formik.errors.email : undefined;
   const passwordError =
@@ -93,9 +98,10 @@ const BaseLoginForm = () => {
       </div>
       <button
         type="submit"
-        className="font-bold text-white bg-linear-to-r from-red-700 to-red-800  p-2 rounded-lg hover:-translate-y-0.5 hover:shadow-md hover:bg-red-700 shadow-rose-400"
+        className={`font-bold text-white bg-linear-to-r from-red-700 to-red-800  p-2 rounded-lg hover:-translate-y-0.5 hover:shadow-md hover:bg-red-700 shadow-rose-400 ${isLoading && 'opacity-50'}`}
+        disabled={isLoading}
       >
-        Sign In
+        {isLoading ? 'Loading...' : 'Sign In'}
       </button>
     </form>
   );
