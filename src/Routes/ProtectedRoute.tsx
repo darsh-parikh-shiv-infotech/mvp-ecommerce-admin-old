@@ -4,7 +4,7 @@ import { useAppSelector } from '../Components/Hook/Common/hooks';
 import FullLoader from '../Components/Common/FullLoader';
 import { useEffect } from 'react';
 export function ProtectedRoute() {
-  const { user, isAuthenticated, loading }: AuthState = useAppSelector((state) => state.auth);
+  const { isAuthenticated, loading }: AuthState = useAppSelector((state) => state.auth);
   const location = useLocation();
   useEffect(()=>{
     
